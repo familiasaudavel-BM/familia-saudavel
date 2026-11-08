@@ -4,8 +4,8 @@
 const CONFIG = {
   // Cole aqui os dados do seu projeto Supabase (Settings > API).
   // Deixe vazio ("") para usar a plataforma só neste aparelho (modo local).
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://sibmaxkjyrvqjaufmiwi.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_gki5aY85whVTsJKcBypvzg__Q2_6RNn",
 
   // Segunda-feira em que começa a semana 1 do ciclo de 2 semanas.
   DATA_INICIO: "2026-11-09",

@@ -6,7 +6,7 @@ const App = (() => {
   const ORDEM = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
   const DIA_NOME = { seg: "Segunda", ter: "Terça", qua: "Quarta", qui: "Quinta", sex: "Sexta", sab: "Sábado", dom: "Domingo" };
   const ABAS = [
-    ["hoje", "📅 Hoje"], ["cardapio", "🍽️ Cardápio"], ["receitas", "📖 Receitas"],
+    ["inicio", "🏠 Início"], ["hoje", "📅 Hoje"], ["cardapio", "🍽️ Cardápio"], ["receitas", "📖 Receitas"],
     ["compras", "🛒 Compras"], ["treinos", "🏃 Treinos"], ["shot", "🍋 Shot e chás"],
     ["acompanhar", "📈 Acompanhar"], ["provas", "🏅 Provas"], ["criancas", "⭐ Crianças"], ["orientacoes", "💡 Orientações"]
   ];
@@ -79,6 +79,7 @@ const App = (() => {
   // ---------- início, login, abas ----------
   async function iniciar() {
     Store.lerLocal();
+    aplicarPerfis();
     const hoje = new Date();
     $("#topo-data").textContent = DIA_NOME[diaKey(hoje)] + ", " + hoje.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }) + " · semana " + semanaCiclo() + " do ciclo";
     montarAbas();
@@ -109,12 +110,13 @@ const App = (() => {
     $("#login").classList.add("oculto");
     $("#btn-sair").classList.remove("oculto");
     await Store.carregar();
+    aplicarPerfis();
     render();
   }
   function montarAbas() {
     $("#abas").innerHTML = ABAS.map(([id, nome]) => `<button class="aba" data-acao="ir" data-aba="${id}">${nome}</button>`).join("");
   }
-  function abaAtual() { const h = location.hash.slice(1); return ABAS.some((a) => a[0] === h) ? h : "hoje"; }
+  function abaAtual() { const h = location.hash.slice(1); return ABAS.some((a) => a[0] === h) ? h : "inicio"; }
   function render() {
     const aba = abaAtual();
     document.querySelectorAll(".aba").forEach((b) => b.classList.toggle("ativa", b.dataset.aba === aba));
@@ -147,6 +149,199 @@ const App = (() => {
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharModal(); });
   }
   ACOES.ir = (el) => { location.hash = el.dataset.aba; };
+
+
+  // ---------- perfis da família ----------
+  const MEMBROS = ["pai", "mae", "c1", "c2"];
+  const ehCrianca = (p) => p === "c1" || p === "c2";
+  function aplicarPerfis() {
+    const pf = Store.get("perfis", {});
+    MEMBROS.forEach((k) => {
+      const x = pf[k] || {};
+      if (x.nome) N[k] = x.nome;
+      if (x.idade) CONFIG.IDADES[k] = Number(x.idade);
+      if (x.agua && !ehCrianca(k)) CONFIG.AGUA[k] = Number(x.agua);
+    });
+  }
+  function perfil(k) { return (Store.get("perfis", {})[k]) || {}; }
+  function abrirPerfis() {
+    const pf = Store.get("perfis", {});
+    const campo = (k, nome, rot, tipo = "text", extra = "") => `<label>${rot}<input type="${tipo}" name="${k}_${nome}" value="${esc((pf[k] || {})[nome] || "")}" ${extra}></label>`;
+    abrirModal(`
+      <h2>👤 Perfis da família</h2>
+      <p class="mudo">Estes dados ficam ${Store.user ? "na nuvem, protegidos pelo login" : "só neste aparelho"} — não vão para o GitHub.</p>
+      <form data-acao="salvar-perfis">
+        <label>Nome da família (aparece na abertura)<input name="familia" value="${esc(pf.familia || "")}" placeholder="Família Martins"></label>
+        ${MEMBROS.map((k) => `
+          <div class="cartao" style="padding:.8rem">
+            <h3>${ehCrianca(k) ? "🧒" : "🧑"} ${esc(N[k])}</h3>
+            <div class="grade-2">
+              ${campo(k, "nome", "Nome ou apelido", "text", 'maxlength="20"')}
+              ${campo(k, "idade", "Idade (anos)", "number", 'inputmode="numeric"')}
+              ${campo(k, "altura", "Altura (cm)", "number", 'inputmode="numeric"')}
+              ${ehCrianca(k) ? campo(k, "escola", "Série / turma") : campo(k, "agua", "Meta de água (copos)", "number", 'inputmode="numeric"')}
+            </div>
+            ${campo(k, "objetivo", ehCrianca(k) ? "Desafio do mês" : "Objetivo", "text", `placeholder="${ehCrianca(k) ? "Provar 3 legumes novos" : "Correr 5 km sem parar"}"`)}
+            ${campo(k, "gosta", "Gosta muito de")}
+            ${campo(k, "evita", "Não gosta / evita")}
+            <label>Observações<textarea name="${k}_obs" placeholder="${ehCrianca(k) ? "Horário da escola, atividades…" : "Orientações do médico, cuidados…"}">${esc((pf[k] || {}).obs || "")}</textarea></label>
+          </div>`).join("")}
+        <button class="btn primario largo">Salvar perfis</button>
+      </form>`);
+  }
+  ACOES.perfis = () => abrirPerfis();
+  ACOES["salvar-perfis"] = (f) => {
+    const fd = new FormData(f); const pf = { ...Store.get("perfis", {}) };
+    pf.familia = (fd.get("familia") || "").trim();
+    MEMBROS.forEach((k) => {
+      const x = {};
+      ["nome", "idade", "altura", "agua", "escola", "objetivo", "gosta", "evita", "obs"].forEach((c) => { const v = fd.get(k + "_" + c); if (v !== null && String(v).trim() !== "") x[c] = String(v).trim(); });
+      pf[k] = x;
+    });
+    Store.set("perfis", pf); aplicarPerfis(); fecharModal(); toast("Perfis salvos"); render();
+  };
+
+  // ---------- fotos (Supabase Storage privado ou aparelho) ----------
+  const BUCKET = "fotos-familia";
+  const urlCache = {};
+  const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const Fotos = {
+    nuvem: () => !!(Store.sb && Store.user),
+    novoId,
+    carregar(file) {
+      return new Promise((ok, erro) => {
+        const url = URL.createObjectURL(file); const img = new Image();
+        img.onload = () => { ok(img); URL.revokeObjectURL(url); };
+        img.onerror = () => { erro(new Error("imagem")); URL.revokeObjectURL(url); };
+        img.src = url;
+      });
+    },
+    async comprimir(file, max, q) {
+      const img = await this.carregar(file);
+      const f = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      return new Promise((ok) => c.toBlob(ok, "image/jpeg", q));
+    },
+    // salva uma foto e devolve {id, path} (nuvem) ou {id, local} (aparelho); null se falhar
+    async salvar(file, pasta) {
+      try {
+        const id = novoId();
+        if (this.nuvem()) {
+          const blob = await this.comprimir(file, 1600, 0.8);
+          const path = `${Store.user.id}/${pasta}/${id}.jpg`;
+          const { error } = await Store.sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+          if (error) throw error;
+          return { id, path };
+        }
+        const blob = await this.comprimir(file, 1000, 0.7);
+        const dados = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+        try { localStorage.setItem("teste-espaco", dados); localStorage.removeItem("teste-espaco"); }
+        catch (e) { toast("Sem espaço no aparelho. Configure o Supabase para guardar mais fotos."); return null; }
+        Store.set("foto:" + id, dados);
+        return { id, local: true };
+      } catch (e) { console.error(e); toast("Uma foto não foi enviada. Tente de novo."); return null; }
+    },
+    async url(f) {
+      if (f.local) return Store.get("foto:" + f.id, "");
+      if (urlCache[f.path]) return urlCache[f.path];
+      if (!this.nuvem()) return "";
+      const { data } = await Store.sb.storage.from(BUCKET).createSignedUrl(f.path, 3600);
+      urlCache[f.path] = (data && data.signedUrl) || "";
+      return urlCache[f.path];
+    },
+    async apagar(fotos) {
+      const caminhos = fotos.filter((f) => f.path).map((f) => f.path);
+      if (caminhos.length && this.nuvem()) await Store.sb.storage.from(BUCKET).remove(caminhos);
+      fotos.filter((f) => f.local).forEach((f) => { delete Store.cache["foto:" + f.id]; Store.salvarLocal(); });
+    },
+    // preenche todas as <img data-foto-json> da tela
+    preencher() {
+      document.querySelectorAll("img[data-foto]").forEach(async (img) => {
+        try { img.src = await Fotos.url(JSON.parse(img.dataset.foto)); } catch (e) { /* ignora */ }
+      });
+    }
+  };
+  const fotoAttr = (f) => esc(JSON.stringify(f));
+
+  // ---------- INÍCIO (abertura) ----------
+  const FRASES = [
+    "Juntos, um passo de cada vez.",
+    "Comida de verdade, família de verdade.",
+    "Cada treino conta. Cada jantar juntos também.",
+    "Hoje é dia de cuidar da gente.",
+    "Devagar se vai longe — e em família, mais longe ainda.",
+    "Saúde é o melhor presente que a gente dá um ao outro.",
+    "Pequenas escolhas, todos os dias."
+  ];
+  TELAS.inicio = () => {
+    const capa = Store.get("capa", []);
+    const pf = Store.get("perfis", {});
+    const d = diaKey(), sem = semanaCiclo();
+    const frase = FRASES[(new Date().getDate()) % FRASES.length];
+    const evs = Store.get("eventos", []).filter((e) => e.status === "inscrito" && e.data >= iso()).sort((a, b) => a.data.localeCompare(b.data));
+    const prox = evs[0];
+    const dias = prox ? Math.round((new Date(prox.data + "T00:00:00") - new Date(iso() + "T00:00:00")) / 86400000) : 0;
+    const atalhos = [["hoje", "📅", "Hoje"], ["cardapio", "🍽️", "Cardápio"], ["treinos", "🏃", "Treinos"], ["provas", "🏅", "Provas"], ["criancas", "⭐", "Crianças"], ["compras", "🛒", "Compras"]];
+    return `
+    <section class="capa">
+      ${capa.length ? `<div class="capa-fotos n${Math.min(capa.length, 4)}">${capa.slice(0, 4).map((f) => `<button class="capa-foto" data-acao="ver-capa" data-id="${f.id}"><img alt="Foto da família" data-foto="${fotoAttr(f)}"></button>`).join("")}</div>`
+        : `<div class="capa-vazia"><div style="font-size:3rem">📸</div><p>Coloque aqui as fotos da família</p></div>`}
+      <div class="capa-texto">
+        <h1>${esc(pf.familia || "Nossa família")}</h1>
+        <p>${esc(frase)}</p>
+      </div>
+    </section>
+    <div class="chips" style="margin:-.3rem 0 1rem">
+      ${capa.length < 4 ? `<label class="btn pequeno" style="margin:0;color:var(--texto)">📷 ${capa.length ? "Adicionar foto" : "Escolher até 4 fotos"}<input type="file" accept="image/*" multiple class="oculto" data-acao="capa-add"></label>` : ""}
+      <button class="btn pequeno" data-acao="perfis">👤 Perfis da família</button>
+    </div>
+    <div class="atalhos">${atalhos.map(([id, em, t]) => `<button class="atalho" data-acao="ir" data-aba="${id}"><span class="em">${em}</span>${t}</button>`).join("")}</div>
+    <div class="grade" style="margin-top:1rem">
+      <section class="cartao destaque">
+        <h2>Hoje · ${DIA_NOME[d]}</h2>
+        <div class="refeicao"><div class="refeicao-titulo">Treino</div>${esc(TREINOS[d].titulo)}</div>
+        <div class="refeicao"><div class="refeicao-titulo">Jantar em família</div>${linksReceitas(CARDAPIO[sem][d].jantar)}</div>
+        <div class="refeicao"><div class="refeicao-titulo">Shot</div>${esc(SHOT.rotacao[d][1])}</div>
+      </section>
+      <section class="cartao">
+        <h2>🏅 Próxima prova</h2>
+        ${prox ? `<p style="font-size:1.15rem"><strong>${esc(prox.nome)}</strong></p><p>${dataBR(prox.data)} · ${String(prox.km).replace(".", ",")} km</p><p class="tag roxo" style="font-size:1rem">${dias === 0 ? "É hoje! 🎉" : "Faltam " + dias + " dias"}</p>`
+          : `<p class="mudo">Nenhuma inscrição ainda.</p><button class="btn pequeno" data-acao="ir" data-aba="provas">Registrar inscrição</button>`}
+      </section>
+      <section class="cartao">
+        <h2>👨‍👩‍👦‍👦 A família</h2>
+        ${MEMBROS.map((k) => { const x = pf[k] || {}; return `<div class="refeicao"><strong>${esc(N[k])}</strong>${x.idade ? ` · ${esc(x.idade)} anos` : ""}${x.objetivo ? `<div class="mudo">🎯 ${esc(x.objetivo)}</div>` : ""}</div>`; }).join("")}
+        <button class="btn pequeno" style="margin-top:.6rem" data-acao="perfis">Editar perfis</button>
+      </section>
+    </div>`;
+  };
+  POS.inicio = () => Fotos.preencher();
+  ACOES["capa-add"] = async (el) => {
+    const arq = [...el.files]; el.value = "";
+    const capa = Store.get("capa", []);
+    const vagas = 4 - capa.length;
+    if (arq.length > vagas) toast(`Cabem só mais ${vagas} foto(s). Usei as primeiras.`);
+    toast("Enviando fotos…");
+    const novas = [];
+    for (const f of arq.slice(0, vagas)) { const r = await Fotos.salvar(f, "capa"); if (r) novas.push(r); }
+    Store.set("capa", [...Store.get("capa", []), ...novas]);
+    if (novas.length) toast("Fotos da família salvas 📸");
+    render();
+  };
+  ACOES["ver-capa"] = async (el) => {
+    const f = Store.get("capa", []).find((x) => x.id === el.dataset.id); if (!f) return;
+    const url = await Fotos.url(f);
+    abrirModal(`<img src="${url}" alt="Foto da família" style="width:100%;border-radius:12px;display:block">
+      <div class="chips" style="margin-top:.8rem"><button class="btn pequeno perigo" data-acao="capa-remover" data-id="${f.id}">Tirar da abertura</button></div>`);
+  };
+  ACOES["capa-remover"] = async (el) => {
+    if (!confirm("Tirar esta foto da abertura?")) return;
+    const capa = Store.get("capa", []); const f = capa.find((x) => x.id === el.dataset.id);
+    if (f) await Fotos.apagar([f]);
+    Store.set("capa", capa.filter((x) => x.id !== el.dataset.id)); fecharModal(); render();
+  };
 
   // ---------- modal e receitas ----------
   function abrirModal(html) { $("#modal-corpo").innerHTML = html; $("#modal").classList.remove("oculto"); document.body.style.overflow = "hidden"; }
@@ -491,7 +686,7 @@ const App = (() => {
   }
   const paceTxt = (min, km) => { if (!min || !km) return "—"; const p = min / km; const m = Math.floor(p); const s = Math.round((p - m) * 60); return `${m}:${z(s === 60 ? 0 : s)} /km`; };
   TELAS.acompanhar = () => {
-    const p = ui.pessoa;
+    const p = ui.pessoa; const kid = ehCrianca(p); const x = perfil(p);
     const med = Store.get("medidas:" + p, []).slice().sort((a, b) => a.d.localeCompare(b.d));
     const cor = Store.get("corridas:" + p, []).slice().sort((a, b) => a.d.localeCompare(b.d));
     let treinos7 = 0, agua7 = 0;
@@ -500,43 +695,56 @@ const App = (() => {
       if (Store.get("treino:" + k, {})[p]) treinos7++;
       agua7 += (Store.get("agua:" + k, {})[p] || 0);
     }
-    const pesos = med.filter((m) => m.peso);
+    const pesos = med.filter((m) => m.peso), alturas = med.filter((m) => m.altura);
     const ultimo = pesos[pesos.length - 1], primeiro = pesos[0];
     const variacao = ultimo && primeiro && ultimo !== primeiro ? (ultimo.peso - primeiro.peso) : null;
+    const altAtual = alturas.length ? alturas[alturas.length - 1].altura : x.altura;
+    const caixa = (cor_, rot, val) => `<div class="cartao" style="margin:0;background:var(--${cor_})"><div class="mudo">${rot}</div><div style="font-size:1.6rem;font-weight:700">${val}</div></div>`;
+    const opcoes = (n) => `<option value="">—</option>${[1, 2, 3, 4, 5].map((v) => `<option>${v}</option>`).join("")}`;
     return `
     <section class="cartao destaque">
       <h2>Acompanhamento</h2>
-      <div class="chips">${["pai", "mae"].map((k) => `<button class="chip ${k === p ? "ativo" : ""}" data-acao="pessoa" data-p="${k}">${esc(N[k])}</button>`).join("")}</div>
-      <div class="grade-2">
-        <div class="cartao" style="margin:0;background:var(--verde-claro)"><div class="mudo">Treinos (7 dias)</div><div style="font-size:1.6rem;font-weight:700">${treinos7}</div></div>
-        <div class="cartao" style="margin:0;background:var(--azul-claro)"><div class="mudo">Água média/dia</div><div style="font-size:1.6rem;font-weight:700">${(agua7 / 7).toFixed(1).replace(".", ",")} <span style="font-size:.9rem">copos</span></div></div>
-        <div class="cartao" style="margin:0;background:var(--laranja-claro)"><div class="mudo">Peso atual</div><div style="font-size:1.6rem;font-weight:700">${ultimo ? String(ultimo.peso).replace(".", ",") + " kg" : "—"}</div></div>
-        <div class="cartao" style="margin:0;background:var(--roxo-claro)"><div class="mudo">Desde o início</div><div style="font-size:1.6rem;font-weight:700">${variacao === null ? "—" : (variacao > 0 ? "+" : "") + variacao.toFixed(1).replace(".", ",") + " kg"}</div></div>
+      <div class="chips">${MEMBROS.map((k) => `<button class="chip ${k === p ? "ativo" : ""}" data-acao="pessoa" data-p="${k}">${ehCrianca(k) ? "🧒" : "🧑"} ${esc(N[k])}</button>`).join("")}</div>
+      <div class="perfil-linha">
+        <div><strong>${esc(N[p])}</strong>${x.idade ? ` · ${esc(x.idade)} anos` : ""}${altAtual ? ` · ${esc(altAtual)} cm` : ""}
+          ${x.objetivo ? `<div class="mudo">🎯 ${esc(x.objetivo)}</div>` : ""}
+          ${x.gosta ? `<div class="mudo">💚 Gosta: ${esc(x.gosta)}</div>` : ""}
+          ${x.evita ? `<div class="mudo">🚫 Evita: ${esc(x.evita)}</div>` : ""}
+          ${x.obs ? `<div class="mudo">📝 ${esc(x.obs)}</div>` : ""}</div>
+        <button class="btn pequeno" data-acao="perfis">✏️ Editar perfil</button>
+      </div>
+      <div class="grade-2" style="margin-top:.8rem">
+        ${kid ? caixa("verde-claro", "Peso atual", ultimo ? String(ultimo.peso).replace(".", ",") + " kg" : "—") + caixa("azul-claro", "Altura atual", altAtual ? altAtual + " cm" : "—")
+          : caixa("verde-claro", "Treinos (7 dias)", treinos7) + caixa("azul-claro", "Água média/dia", (agua7 / 7).toFixed(1).replace(".", ",") + ' <span style="font-size:.9rem">copos</span>')
+            + caixa("laranja-claro", "Peso atual", ultimo ? String(ultimo.peso).replace(".", ",") + " kg" : "—")
+            + caixa("roxo-claro", "Desde o início", variacao === null ? "—" : (variacao > 0 ? "+" : "") + variacao.toFixed(1).replace(".", ",") + " kg")}
       </div>
     </section>
     <div class="grade">
       <section class="cartao">
-        <h2>Registrar medidas</h2>
+        <h2>Registrar ${kid ? "crescimento" : "medidas"}</h2>
         <form data-acao="salvar-medida">
           <label>Data<input type="date" name="d" value="${iso()}" required></label>
           <div class="grade-2">
             <label>Peso (kg)<input type="number" name="peso" step="0.1" inputmode="decimal"></label>
+            ${kid ? `<label>Altura (cm)<input type="number" name="altura" step="0.5" inputmode="decimal"></label>` : `
             <label>Cintura (cm)<input type="number" name="cintura" step="0.5" inputmode="decimal"></label>
             <label>Sono (horas)<input type="number" name="sono" step="0.5" inputmode="decimal"></label>
-            <label>Energia (1 a 5)<select name="energia"><option value="">—</option>${[1, 2, 3, 4, 5].map((v) => `<option>${v}</option>`).join("")}</select></label>
-            <label>Apetite (1 a 5)<select name="apetite"><option value="">—</option>${[1, 2, 3, 4, 5].map((v) => `<option>${v}</option>`).join("")}</select></label>
-            <label>Intestino<select name="intestino"><option value="">—</option><option>Normal</option><option>Preso</option><option>Solto</option></select></label>
+            <label>Energia (1 a 5)<select name="energia">${opcoes()}</select></label>
+            <label>Apetite (1 a 5)<select name="apetite">${opcoes()}</select></label>
+            <label>Intestino<select name="intestino"><option value="">—</option><option>Normal</option><option>Preso</option><option>Solto</option></select></label>`}
           </div>
-          <label>Observação<textarea name="obs" placeholder="Como se sentiu, dores, enjoo…"></textarea></label>
+          <label>Observação<textarea name="obs" placeholder="${kid ? "Consulta no pediatra, como está comendo…" : "Como se sentiu, dores, enjoo…"}"></textarea></label>
           <button class="btn primario largo">Salvar</button>
         </form>
       </section>
       <section class="cartao">
         <h2>Peso</h2>${grafico(pesos.map((m) => ({ d: m.d, y: Number(m.peso) })), "kg")}
-        <h2 style="margin-top:1rem">Cintura</h2>${grafico(med.filter((m) => m.cintura).map((m) => ({ d: m.d, y: Number(m.cintura) })), "cm")}
+        ${kid ? `<h2 style="margin-top:1rem">Altura</h2>${grafico(alturas.map((m) => ({ d: m.d, y: Number(m.altura) })), "cm")}`
+          : `<h2 style="margin-top:1rem">Cintura</h2>${grafico(med.filter((m) => m.cintura).map((m) => ({ d: m.d, y: Number(m.cintura) })), "cm")}`}
       </section>
       <section class="cartao">
-        <h2>Registrar corrida</h2>
+        <h2>Registrar corrida de treino</h2>
         <form data-acao="salvar-corrida">
           <label>Data<input type="date" name="d" value="${iso()}" required></label>
           <div class="grade-2">
@@ -545,6 +753,7 @@ const App = (() => {
           </div>
           <button class="btn primario largo">Salvar corrida</button>
         </form>
+        <p class="mudo" style="margin-top:.5rem">Provas e eventos oficiais ficam na aba 🏅 Provas.</p>
         <h3 style="margin-top:1rem">Ritmo (min/km — quanto menor, melhor)</h3>
         ${grafico(cor.map((c) => ({ d: c.d, y: c.min / c.km })), "min/km")}
         ${cor.length ? `<table class="tabela" style="margin-top:.6rem"><thead><tr><th>Data</th><th>km</th><th>Tempo</th><th>Ritmo</th><th></th></tr></thead><tbody>
@@ -553,16 +762,16 @@ const App = (() => {
       </section>
       <section class="cartao">
         <h2>Histórico</h2>
-        ${med.length ? `<div class="rolar"><table class="tabela"><thead><tr><th>Data</th><th>Peso</th><th>Cintura</th><th>Sono</th><th>Energia</th><th>Apetite</th><th>Intestino</th><th></th></tr></thead><tbody>
-          ${med.slice().reverse().map((m) => `<tr><td>${dataBR(m.d)}</td><td>${m.peso || "—"}</td><td>${m.cintura || "—"}</td><td>${m.sono || "—"}</td><td>${m.energia || "—"}</td><td>${m.apetite || "—"}</td><td>${esc(m.intestino || "—")}</td><td><button class="btn pequeno perigo" data-acao="del" data-tipo="medidas" data-d="${m.d}" aria-label="Apagar">✕</button></td></tr>${m.obs ? `<tr><td></td><td colspan="7" class="mudo">${esc(m.obs)}</td></tr>` : ""}`).join("")}
-        </tbody></table></div>` : `<p class="mudo">Sem registros ainda. Sugestão: pesar 1 vez por semana, no mesmo dia e horário, em jejum.</p>`}
+        ${med.length ? `<div class="rolar"><table class="tabela"><thead><tr><th>Data</th><th>Peso</th>${kid ? "<th>Altura</th>" : "<th>Cintura</th><th>Sono</th><th>Energia</th><th>Apetite</th><th>Intestino</th>"}<th></th></tr></thead><tbody>
+          ${med.slice().reverse().map((m) => `<tr><td>${dataBR(m.d)}</td><td>${m.peso || "—"}</td>${kid ? `<td>${m.altura || "—"}</td>` : `<td>${m.cintura || "—"}</td><td>${m.sono || "—"}</td><td>${m.energia || "—"}</td><td>${m.apetite || "—"}</td><td>${esc(m.intestino || "—")}</td>`}<td><button class="btn pequeno perigo" data-acao="del" data-tipo="medidas" data-d="${m.d}" aria-label="Apagar">✕</button></td></tr>${m.obs ? `<tr><td></td><td colspan="${kid ? 3 : 7}" class="mudo">${esc(m.obs)}</td></tr>` : ""}`).join("")}
+        </tbody></table></div>` : `<p class="mudo">Sem registros ainda. ${kid ? "Sugestão: medir peso e altura 1 vez por mês." : "Sugestão: pesar 1 vez por semana, no mesmo dia e horário, em jejum."}</p>`}
       </section>
     </div>`;
   };
   ACOES.pessoa = (el) => { ui.pessoa = el.dataset.p; render(); };
   ACOES["salvar-medida"] = (f) => {
     const v = Object.fromEntries(new FormData(f)); const k = "medidas:" + ui.pessoa;
-    const reg = {}; Object.entries(v).forEach(([a, b]) => { if (b !== "") reg[a] = ["peso", "cintura", "sono"].includes(a) ? Number(b) : b; });
+    const reg = {}; Object.entries(v).forEach(([a, b]) => { if (b !== "") reg[a] = ["peso", "cintura", "sono", "altura"].includes(a) ? Number(b) : b; });
     if (Object.keys(reg).length < 2) { toast("Preencha pelo menos um campo."); return; }
     const lista = Store.get(k, []).filter((m) => m.d !== reg.d);
     Store.set(k, [...lista, reg]); toast("Medidas salvas"); render();
@@ -591,5 +800,5 @@ const App = (() => {
       </section>
     </div>`;
 
-  return { iniciar, render, Store, ACOES, TELAS, POS, dataBR, esc, iso, toast, falar, abrirModal, fecharModal, receitaPorId, N };
+  return { iniciar, render, Store, ACOES, TELAS, POS, Fotos, dataBR, esc, iso, toast, falar, abrirModal, fecharModal, receitaPorId, N };
 })();

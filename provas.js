@@ -2,14 +2,12 @@
 // FAMÍLIA SAUDÁVEL — provas e eventos de corrida (com fotos)
 // ============================================================
 (() => {
-  const { Store, ACOES, TELAS, POS, esc, iso, toast, abrirModal, fecharModal, dataBR, N } = App;
+  const { Store, ACOES, TELAS, POS, Fotos, esc, iso, toast, abrirModal, fecharModal, dataBR, N } = App;
   const PESSOAS = ["pai", "mae", "c1", "c2"];
-  const BUCKET = "fotos-familia";
   const DISTANCIAS = [["1", "1 km (infantil)"], ["3", "3 km"], ["5", "5 km"], ["10", "10 km"], ["21.1", "21,1 km (meia)"], ["42.2", "42,2 km (maratona)"]];
-  const urlCache = {};
 
-  const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  const nuvem = () => !!(Store.sb && Store.user);
+  const novoId = Fotos.novoId;
+  const nuvem = () => Fotos.nuvem();
   const eventos = () => Store.get("eventos", []);
   const salvar = (lista) => Store.set("eventos", lista);
   const kmTxt = (km) => String(km).replace(".", ",") + " km";
@@ -36,66 +34,19 @@
     return Math.round((alvo - hoje) / 86400000);
   }
 
-  // ---------- fotos ----------
-  function carregarImagem(file) {
-    return new Promise((ok, erro) => {
-      const url = URL.createObjectURL(file); const img = new Image();
-      img.onload = () => { ok(img); URL.revokeObjectURL(url); };
-      img.onerror = () => { erro(new Error("imagem")); URL.revokeObjectURL(url); };
-      img.src = url;
-    });
-  }
-  async function comprimir(file, max, qualidade) {
-    const img = await carregarImagem(file);
-    const esc2 = Math.min(1, max / Math.max(img.width, img.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(img.width * esc2); c.height = Math.round(img.height * esc2);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    return new Promise((ok) => c.toBlob(ok, "image/jpeg", qualidade));
-  }
-  const paraDataURL = (blob) => new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
-
+  // ---------- fotos (usa App.Fotos) ----------
   async function enviarFotos(eventoId, arquivos) {
     if (!arquivos || !arquivos.length) return;
     toast(`Enviando ${arquivos.length} foto(s)…`);
     const novas = [];
-    for (const f of arquivos) {
-      try {
-        if (nuvem()) {
-          const blob = await comprimir(f, 1600, 0.8);
-          const path = `${Store.user.id}/${eventoId}/${novoId()}.jpg`;
-          const { error } = await Store.sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg" });
-          if (error) throw error;
-          novas.push({ id: novoId(), path });
-        } else {
-          const blob = await comprimir(f, 1000, 0.7);
-          const id = novoId();
-          const dados = await paraDataURL(blob);
-          try { localStorage.setItem("teste-espaco", dados); localStorage.removeItem("teste-espaco"); }
-          catch (e) { toast("Sem espaço no aparelho. Configure o Supabase para guardar mais fotos."); break; }
-          Store.set("foto:" + id, dados);
-          novas.push({ id, local: true });
-        }
-      } catch (e) { console.error(e); toast("Uma foto não foi enviada. Tente de novo."); }
-    }
+    for (const f of arquivos) { const r = await Fotos.salvar(f, eventoId); if (r) novas.push(r); else if (!Fotos.nuvem()) break; }
     const lista = eventos(); const ev = lista.find((x) => x.id === eventoId);
     if (ev) { ev.fotos = [...(ev.fotos || []), ...novas]; salvar([...lista]); }
     if (novas.length) toast(`${novas.length} foto(s) salva(s) 📷`);
     App.render();
   }
-  async function urlFoto(f) {
-    if (f.local) return Store.get("foto:" + f.id, "");
-    if (urlCache[f.path]) return urlCache[f.path];
-    if (!nuvem()) return "";
-    const { data } = await Store.sb.storage.from(BUCKET).createSignedUrl(f.path, 3600);
-    urlCache[f.path] = (data && data.signedUrl) || "";
-    return urlCache[f.path];
-  }
-  async function apagarArquivos(fotos) {
-    const caminhos = fotos.filter((f) => f.path).map((f) => f.path);
-    if (caminhos.length && nuvem()) await Store.sb.storage.from(BUCKET).remove(caminhos);
-    fotos.filter((f) => f.local).forEach((f) => { delete Store.cache["foto:" + f.id]; Store.salvarLocal(); });
-  }
+  const urlFoto = (f) => Fotos.url(f);
+  const apagarArquivos = (fotos) => Fotos.apagar(fotos);
 
   // ---------- tela ----------
   function recordes(lista) {

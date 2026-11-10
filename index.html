@@ -33,6 +33,7 @@
     </div>
     <div class="topo-dir">
       <span id="sync" class="sync" title="Situação dos dados"></span>
+      <button id="btn-editar" class="btn-icone" data-acao="modo-editar" aria-label="Modo edição">✏️</button>
       <button id="btn-sair" class="btn-icone oculto" aria-label="Sair">⎋</button>
     </div>
   </div>
@@ -40,6 +41,7 @@
 </header>
 
 <main id="conteudo" class="conteudo"></main>
+<nav id="nav" class="nav-baixo" aria-label="Seções"></nav>
 
 <div id="modal" class="modal oculto" role="dialog" aria-modal="true">
   <div class="modal-caixa">
@@ -53,9 +55,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="dados.js"></script>
+<script src="figuras.js"></script>
 <script src="app.js"></script>
 <script src="criancas.js"></script>
 <script src="provas.js"></script>
+<script src="relogio.js"></script>
+<script src="editor.js"></script>
 <script>App.iniciar();</script>
 </body>
 </html>

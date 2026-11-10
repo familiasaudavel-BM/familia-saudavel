@@ -5,15 +5,20 @@ const App = (() => {
   const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
   const ORDEM = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
   const DIA_NOME = { seg: "Segunda", ter: "Terça", qua: "Quarta", qui: "Quinta", sex: "Sexta", sab: "Sábado", dom: "Domingo" };
-  const ABAS = [
-    ["inicio", "🏠 Início"], ["hoje", "📅 Hoje"], ["cardapio", "🍽️ Cardápio"], ["receitas", "📖 Receitas"],
-    ["compras", "🛒 Compras"], ["treinos", "🏃 Treinos"], ["shot", "🍋 Shot e chás"],
-    ["acompanhar", "📈 Acompanhar"], ["provas", "🏅 Provas"], ["criancas", "⭐ Crianças"], ["orientacoes", "💡 Orientações"]
+  const GRUPOS = [
+    { id: "inicio", em: "🏠", nome: "Início", abas: [["inicio", "Início"], ["hoje", "Hoje"]] },
+    { id: "comer", em: "🍽️", nome: "Comer", abas: [["cardapio", "Cardápio"], ["receitas", "Receitas"], ["compras", "Compras"], ["shot", "Shot e chás"]] },
+    { id: "mover", em: "🏃", nome: "Mover", abas: [["treinos", "Treinos"], ["provas", "Corridas e provas"], ["relogio", "Relógio"]] },
+    { id: "familia", em: "⭐", nome: "Família", abas: [["criancas", "Crianças"], ["acompanhar", "Acompanhar"]] },
+    { id: "mais", em: "⚙️", nome: "Mais", abas: [["ajustes", "Ajustes"], ["orientacoes", "Orientações"]] }
   ];
+  const ABAS = GRUPOS.flatMap((g) => g.abas);
   const N = CONFIG.NOMES;
-  const ui = { cardSemana: null, treinoSemana: null, treinoDia: null, cat: "todas", busca: "", pessoa: "pai" };
+  const ui = { editar: false, cardSemana: null, treinoSemana: null, treinoDia: null, cat: "todas", busca: "", pessoa: "pai" };
   const ACOES = {};
   const TELAS = {};
+  const aoCarregar = [];
+  const edBtn = (acao, attrs = "", txt = "✏️ Editar") => ui.editar ? `<button type="button" class="btn pequeno ed" data-acao="${acao}" ${attrs}>${txt}</button>` : "";
   const POS = {};
 
   // ---------- utilidades ----------
@@ -114,11 +119,16 @@ const App = (() => {
     render();
   }
   function montarAbas() {
-    $("#abas").innerHTML = ABAS.map(([id, nome]) => `<button class="aba" data-acao="ir" data-aba="${id}">${nome}</button>`).join("");
+    const aba = abaAtual(); const g = GRUPOS.find((x) => x.abas.some((a) => a[0] === aba));
+    $("#abas").innerHTML = g.abas.map(([id, nome]) => `<button class="aba" data-acao="ir" data-aba="${id}">${nome}</button>`).join("");
+    $("#nav").innerHTML = GRUPOS.map((x) => `<button class="nav-btn ${x === g ? "ativo" : ""}" data-acao="ir" data-aba="${x.abas[0][0]}"><span class="em">${x.em}</span>${x.nome}</button>`).join("");
+    $("#btn-editar").classList.toggle("ligado", ui.editar);
+    document.body.classList.toggle("editando", ui.editar);
   }
   function abaAtual() { const h = location.hash.slice(1); return ABAS.some((a) => a[0] === h) ? h : "inicio"; }
   function render() {
     const aba = abaAtual();
+    montarAbas();
     document.querySelectorAll(".aba").forEach((b) => b.classList.toggle("ativa", b.dataset.aba === aba));
     const ativa = document.querySelector(".aba.ativa"); if (ativa) ativa.scrollIntoView({ inline: "center", block: "nearest" });
     $("#conteudo").innerHTML = TELAS[aba]();
@@ -149,12 +159,14 @@ const App = (() => {
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharModal(); });
   }
   ACOES.ir = (el) => { location.hash = el.dataset.aba; };
+  ACOES["modo-editar"] = () => { ui.editar = !ui.editar; toast(ui.editar ? "Modo edição ligado: toque nos botões ✏️" : "Modo edição desligado"); render(); };
 
 
   // ---------- perfis da família ----------
   const MEMBROS = ["pai", "mae", "c1", "c2"];
   const ehCrianca = (p) => p === "c1" || p === "c2";
   function aplicarPerfis() {
+    aoCarregar.forEach((f) => f());
     const pf = Store.get("perfis", {});
     MEMBROS.forEach((k) => {
       const x = pf[k] || {};
@@ -283,7 +295,7 @@ const App = (() => {
     const evs = Store.get("eventos", []).filter((e) => e.status === "inscrito" && e.data >= iso()).sort((a, b) => a.data.localeCompare(b.data));
     const prox = evs[0];
     const dias = prox ? Math.round((new Date(prox.data + "T00:00:00") - new Date(iso() + "T00:00:00")) / 86400000) : 0;
-    const atalhos = [["hoje", "📅", "Hoje"], ["cardapio", "🍽️", "Cardápio"], ["treinos", "🏃", "Treinos"], ["provas", "🏅", "Provas"], ["criancas", "⭐", "Crianças"], ["compras", "🛒", "Compras"]];
+    const atalhos = [["hoje", "📅", "Hoje"], ["cardapio", "🍽️", "Cardápio"], ["treinos", "🏃", "Treinos"], ["provas", "🏅", "Corridas"], ["criancas", "⭐", "Crianças"], ["compras", "🛒", "Compras"]];
     return `
     <section class="capa">
       ${capa.length ? `<div class="capa-fotos n${Math.min(capa.length, 4)}">${capa.slice(0, 4).map((f) => `<button class="capa-foto" data-acao="ver-capa" data-id="${f.id}"><img alt="Foto da família" data-foto="${fotoAttr(f)}"></button>`).join("")}</div>`
@@ -357,7 +369,7 @@ const App = (() => {
       <h3>Modo de preparo</h3><ol>${r.passos.map((p) => `<li>${esc(p)}</li>`).join("")}</ol>
       ${r.dica ? `<p class="cartao" style="background:var(--amarelo-claro)">💡 ${esc(r.dica)}</p>` : ""}
       ${r.kids ? `<p class="cartao" style="background:var(--laranja-claro)">👧 Crianças ajudam: ${esc(r.kids)}</p>` : ""}
-      <button class="btn largo" data-acao="fav" data-id="${r.id}">${fav ? "★ Tirar das favoritas" : "☆ Marcar como favorita"}</button>`);
+      ${edBtn("ed-receita", `data-id="${r.id}"`, "✏️ Editar esta receita")} <button class="btn largo" data-acao="fav" data-id="${r.id}">${fav ? "★ Tirar das favoritas" : "☆ Marcar como favorita"}</button>`);
   }
   ACOES.fav = (el) => {
     const id = el.dataset.id; let f = Store.get("favoritas", []);
@@ -389,7 +401,7 @@ const App = (() => {
     return `
     <div class="grade">
       <section class="cartao destaque">
-        <h2>Rotina de hoje</h2>
+        <h2>Rotina de hoje ${edBtn("ed-rotina")}</h2>
         <ul class="tempo">${rot.map((r, i) => `
           <li class="${i === atual ? "agora" : ""}">
             <span class="hora">${r.h}</span>
@@ -400,11 +412,11 @@ const App = (() => {
       <div>
         <section class="cartao">
           <h2>Comida de hoje</h2>
-          <div class="refeicao"><div class="refeicao-titulo">Café da manhã ${d === "sab" || d === "dom" ? "7:30" : "6:20"}</div>${linksReceitas(c.cafe)}</div>
-          <div class="refeicao"><div class="refeicao-titulo">Almoço${["sab", "dom"].includes(d) ? " em família" : " (crianças na escola)"}</div>${linksReceitas(c.almoco)}</div>
-          <div class="refeicao"><div class="refeicao-titulo">Lanche 16:00</div>${linksReceitas(c.lanche)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Café da manhã ${d === "sab" || d === "dom" ? "7:30" : "6:20"}</div>${linksReceitas(c.cafe)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="cafe"`)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Almoço${["sab", "dom"].includes(d) ? " em família" : " (crianças na escola)"}</div>${linksReceitas(c.almoco)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="almoco"`)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Lanche 16:00</div>${linksReceitas(c.lanche)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="lanche"`)}</div>
           ${pre ? `<div class="refeicao"><div class="refeicao-titulo">Pré-treino (adultos)</div><div>${esc(pre)}</div></div>` : ""}
-          <div class="refeicao"><div class="refeicao-titulo">Jantar em família</div>${linksReceitas(c.jantar)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Jantar em família</div>${linksReceitas(c.jantar)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="jantar"`)}</div>
         </section>
         <section class="cartao">
           <h2>Treino · ${esc(t.titulo)}</h2>
@@ -465,10 +477,10 @@ const App = (() => {
       ${ORDEM.map((d) => { const c = CARDAPIO[sem][d]; const eHoje = d === hoje && sem === atual; return `
         <section class="cartao ${eHoje ? "destaque" : ""}">
           <h3>${DIA_NOME[d]}${eHoje ? " · hoje" : ""}</h3>
-          <div class="refeicao"><div class="refeicao-titulo">Café da manhã</div>${linksReceitas(c.cafe)}</div>
-          <div class="refeicao"><div class="refeicao-titulo">Almoço</div>${linksReceitas(c.almoco)}</div>
-          <div class="refeicao"><div class="refeicao-titulo">Lanche 16:00</div>${linksReceitas(c.lanche)}</div>
-          <div class="refeicao"><div class="refeicao-titulo">Jantar</div>${linksReceitas(c.jantar)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Café da manhã</div>${linksReceitas(c.cafe)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="cafe"`)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Almoço</div>${linksReceitas(c.almoco)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="almoco"`)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Lanche 16:00</div>${linksReceitas(c.lanche)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="lanche"`)}</div>
+          <div class="refeicao"><div class="refeicao-titulo">Jantar</div>${linksReceitas(c.jantar)}${edBtn("ed-refeicao", `data-s="${sem}" data-d="${d}" data-r="jantar"`)}</div>
         </section>`; }).join("")}
     </div>
     <section class="cartao">
@@ -482,7 +494,7 @@ const App = (() => {
   // ---------- RECEITAS ----------
   TELAS.receitas = () => `
     <section class="cartao destaque">
-      <h2>Receitas (${RECEITAS.length})</h2>
+      <h2>Receitas (${RECEITAS.length}) ${edBtn("ed-receitas", "", "✏️ Gerenciar receitas")}</h2>
       <label>Buscar receita ou ingrediente<input id="busca-receita" type="search" placeholder="frango, batata-doce, air fryer…" value="${esc(ui.busca)}"></label>
       <div class="chips">
         ${[["todas", "Todas"], ["fav", "★ Favoritas"], ["kids", "👧 Com as crianças"], ...Object.entries(CATEGORIAS)].map(([k, v]) => `<button class="chip ${ui.cat === k ? "ativo" : ""}" data-acao="cat" data-k="${k}">${v}</button>`).join("")}
@@ -511,9 +523,9 @@ const App = (() => {
 
   // ---------- COMPRAS ----------
   TELAS.compras = () => {
-    const marc = Store.get("compras", []);
-    const total = COMPRAS.reduce((a, c) => a + c[3], 0);
-    const marcado = COMPRAS.reduce((a, c, i) => a + (marc.includes(i) ? c[3] : 0), 0);
+    const marc = Store.get("compras", []).filter((x) => typeof x === "string" && COMPRAS.some((c) => c[1] === x));
+    const total = COMPRAS.reduce((a, c) => a + (Number(c[3]) || 0), 0);
+    const marcado = COMPRAS.reduce((a, c, i) => a + (marc.includes(c[1]) ? Number(c[3]) || 0 : 0), 0);
     const pago = Store.get("pago", { c1: "", c2: "" });
     const totalPago = (Number(pago.c1) || 0) + (Number(pago.c2) || 0);
     const grupos = [...new Set(COMPRAS.map((c) => c[0]))];
@@ -521,7 +533,7 @@ const App = (() => {
     const prep = Store.get("preparo:" + seg, []);
     return `
     <section class="cartao destaque">
-      <h2>Lista de 14 dias</h2>
+      <h2>Lista de 14 dias ${edBtn("ed-compras", "", "✏️ Editar lista")}</h2>
       <p>Estimado: <strong>R$ ${total}</strong> de R$ ${ORCAMENTO} · no carrinho: <strong>R$ ${marcado}</strong> (${marc.length} de ${COMPRAS.length} itens)</p>
       <div class="barra"><span style="width:${Math.round(marc.length / COMPRAS.length * 100)}%"></span></div>
       <p class="mudo">Compra 1 (dia 1): secos, proteínas e metade do hortifrúti. Compra 2 (dia 8): a outra metade do hortifrúti. Casa já tem: azeite, óleo, sal, café, temperos e suplementos.</p>
@@ -535,8 +547,8 @@ const App = (() => {
     <div class="grade">
       ${grupos.map((g) => `<section class="cartao"><h3>${esc(g)}</h3>
         ${COMPRAS.map((c, i) => c[0] !== g ? "" : `
-          <label class="check ${marc.includes(i) ? "feito" : ""}">
-            <input type="checkbox" data-acao="compra" data-i="${i}" ${marc.includes(i) ? "checked" : ""}>
+          <label class="check ${marc.includes(c[1]) ? "feito" : ""}">
+            <input type="checkbox" data-acao="compra" data-n="${esc(c[1])}" ${marc.includes(c[1]) ? "checked" : ""}>
             <span class="check-txt">${esc(c[1])}<br><span class="mudo">${esc(c[2])}</span></span>
             <span class="check-dir">R$ ${c[3]}</span>
           </label>`).join("")}
@@ -552,8 +564,8 @@ const App = (() => {
     </div>`;
   };
   ACOES.compra = (el) => {
-    const i = Number(el.dataset.i); let m = Store.get("compras", []);
-    m = el.checked ? [...new Set([...m, i])] : m.filter((x) => x !== i); Store.set("compras", m); render();
+    const n = el.dataset.n; let m = Store.get("compras", []).filter((x) => typeof x === "string");
+    m = el.checked ? [...new Set([...m, n])] : m.filter((x) => x !== n); Store.set("compras", m); render();
   };
   ACOES.pago = (el) => { const p = Store.get("pago", { c1: "", c2: "" }); p[el.dataset.c] = el.value; Store.set("pago", { ...p }); render(); };
   ACOES["compras-limpar"] = () => { if (confirm("Limpar todas as marcações e valores da lista?")) { Store.set("compras", []); Store.set("pago", { c1: "", c2: "" }); render(); } };
@@ -572,19 +584,25 @@ const App = (() => {
     let n = 0;
     return `
     <section class="cartao destaque">
-      <h2>Treinos · 19:00</h2>
+      <h2>Treinos em casa · 19:00</h2>
       <div class="chips">${[1, 2].map((s) => `<button class="chip ${s === sem ? "ativo" : ""}" data-acao="treino-semana" data-s="${s}">Semana ${s}${s === atual ? " (atual)" : ""}</button>`).join("")}</div>
       <div class="chips">${ORDEM.map((d) => `<button class="chip ${d === dia ? "ativo" : ""}" data-acao="treino-dia" data-d="${d}">${DIA_NOME[d].slice(0, 3)}${d === diaKey() ? " •" : ""}</button>`).join("")}</div>
     </section>
     <section class="cartao">
       <h2>${DIA_NOME[dia]} · ${esc(t.titulo)}</h2>
+      ${t.equip ? `<p class="mudo">🧰 ${esc(t.equip)}</p>` : ""}
       ${t.nota ? `<p class="mudo">${esc(t.nota)}</p>` : ""}
-      ${t.blocos.map((b) => `
-        <h3 style="margin-top:.8rem">${esc(b.nome)}</h3>
+      <div class="chips">${edBtn("ed-treino-dia", `data-d="${dia}"`, "✏️ Título, nota e corrida")}${edBtn("ed-blocos", `data-d="${dia}"`, "✏️ Blocos do treino")}</div>
+      ${t.blocos.map((b, bi) => `
+        <h3 style="margin-top:.9rem">${esc(b.nome)} ${edBtn("ed-exercicios", `data-d="${dia}" data-b="${bi}"`, "✏️ Exercícios")}</h3>
         ${b.itens.map((it) => { const i = n++; return `
-          <label class="exercicio">
+          <label class="exercicio2">
             <input type="checkbox" data-acao="ex" data-k="${exKey}" data-i="${i}" ${exFeitos.includes(i) ? "checked" : ""}>
-            <span>${esc(it[0])}</span>
+            <span class="exfig">${FIGURAS[it[3]] || ""}</span>
+            <span class="extxt"><strong>${esc(it[0])}</strong>
+              ${it[6] ? `<small>${esc(it[6])}</small>` : ""}
+              <span>${it[4] ? `<span class="tag azul">${esc(N.pai)}: ${esc(it[4])}</span>` : ""}${it[5] ? `<span class="tag rosa">${esc(N.mae)}: ${esc(it[5])}</span>` : ""}</span>
+            </span>
             <span class="series">${esc(sem === 1 ? it[1] : it[2])}</span>
           </label>`; }).join("")}`).join("")}
       <div class="corrida">
@@ -598,7 +616,7 @@ const App = (() => {
     <section class="cartao">
       <h2>Semana ${sem} de relance</h2>
       <div class="rolar"><table class="tabela">
-        <thead><tr><th>Dia</th><th>Musculação</th><th>Corrida</th></tr></thead>
+        <thead><tr><th>Dia</th><th>Treino</th><th>Corrida</th></tr></thead>
         <tbody>${ORDEM.map((d) => `<tr><td><strong>${DIA_NOME[d].slice(0, 3)}</strong></td><td>${esc(TREINOS[d].titulo)}</td><td>${esc(TREINOS[d].corrida.tipo)}${TREINOS[d].corrida["s" + sem] !== "—" ? " · " + esc(TREINOS[d].corrida["s" + sem]) : ""}</td></tr>`).join("")}</tbody>
       </table></div>
     </section>
@@ -800,5 +818,5 @@ const App = (() => {
       </section>
     </div>`;
 
-  return { iniciar, render, Store, ACOES, TELAS, POS, Fotos, dataBR, esc, iso, toast, falar, abrirModal, fecharModal, receitaPorId, N };
+  return { iniciar, render, Store, ACOES, TELAS, POS, Fotos, ui, edBtn, aoCarregar, grafico, MEMBROS, ehCrianca, perfil, semanaCiclo, diaKey, abrirReceita, abrirPerfis, ORDEM, DIA_NOME, dataBR, esc, iso, toast, falar, abrirModal, fecharModal, receitaPorId, N };
 })();

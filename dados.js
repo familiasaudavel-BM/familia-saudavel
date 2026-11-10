@@ -52,135 +52,129 @@ const ROTINA = {
   ]
 };
 
-// ---------- TREINOS (2 semanas) ----------
-// s1 = semana 1 (adaptação) · s2 = semana 2 (progressão)
+// ---------- TREINOS EM CASA (2 semanas) ----------
+// Cada exercício: [nome, semana 1, semana 2, figura, carga do pai, carga da mãe, como fazer]
 const TREINOS = {
-  seg: {
-    titulo: "Membros superiores — empurrar", cor: "azul",
+  seg: { titulo: "Superiores — empurrar", equip: "Kit de halteres · tatame · caixote",
     blocos: [
       { nome: "Aquecimento (8 min)", itens: [
-        ["Polichinelo leve ou bicicleta", "5 min", "5 min"],
-        ["Rotação de ombros e braços", "1 x 15", "1 x 15"] ] },
+        ["Marcha no lugar ou polichinelo leve", "3 min", "3 min", "polichinelo", "", "", ""],
+        ["Rotação de ombros", "2 x 15", "2 x 15", "ombro", "", "", "Para frente e para trás"],
+        ["Flexão na parede", "1 x 10", "1 x 12", "porta", "", "", ""] ] },
       { nome: "Musculação", itens: [
-        ["Supino reto (máquina ou halteres)", "3 x 12", "3 x 10 (+carga)"],
-        ["Desenvolvimento com halteres sentado", "3 x 12", "3 x 10 (+carga)"],
-        ["Supino inclinado com halteres", "3 x 12", "3 x 10"],
-        ["Elevação lateral", "3 x 15", "3 x 12"],
-        ["Tríceps na polia", "3 x 12", "3 x 12 (+carga)"],
-        ["Tríceps francês com halter", "2 x 12", "3 x 12"] ] },
-      { nome: "Core + isometria", itens: [
-        ["Prancha frontal", "3 x 30 s", "3 x 40 s"],
-        ["Dead bug (inseto morto)", "3 x 10", "3 x 12"],
-        ["Prancha lateral", "2 x 20 s cada lado", "2 x 30 s cada lado"] ] }
+        ["Flexão de braço", "3 x 10", "3 x 12", "flexao", "no chão, com as alças push-up", "mãos no caixote ou sofá", "Corpo reto da cabeça aos pés"],
+        ["Supino no chão com 1 halter", "3 x 12 cada braço", "3 x 12 (+1 anilha)", "supino", "halter pesado (≈ 8,5 kg)", "halter leve (≈ 3,5 kg)", "Deitados no tatame, joelhos dobrados"],
+        ["Desenvolvimento sentado", "3 x 12 cada braço", "3 x 12 (+1 anilha)", "desenvolvimento", "halter leve", "halter leve", "Cadeira com encosto, halter acima da cabeça"],
+        ["Elevação lateral", "3 x 12 cada braço", "3 x 15", "lateral", "halter leve", "garrafa de 1,5 L", "Braço sobe só até a altura do ombro"],
+        ["Tríceps francês", "3 x 12", "3 x 15", "triceps", "halter pesado", "kettlebell 4 kg", "Sentados, peso com as duas mãos atrás da cabeça"] ] },
+      { nome: "Core no tatame", itens: [
+        ["Prancha", "3 x 30 s", "3 x 40 s", "prancha", "", "pode apoiar os joelhos", ""],
+        ["Dead bug", "3 x 10", "3 x 12", "deadbug", "", "", "Braço e perna opostos, lombar no chão"],
+        ["Prancha lateral", "2 x 20 s cada lado", "2 x 30 s cada lado", "lateralprancha", "", "pode apoiar os joelhos", ""] ] }
     ],
-    corrida: { tipo: "Trote leve contínuo", s1: "15 min", s2: "18 min",
-      obs: "Ritmo de conversa: dá para falar frases inteiras." }
-  },
-  ter: {
-    titulo: "Membros inferiores — foco anterior", cor: "verde",
+    corrida: { tipo: "Trote leve contínuo", s1: "15 min", s2: "18 min", obs: "Ritmo de conversa. Mãe: caminhada rápida até a liberação médica." } },
+  ter: { titulo: "Pernas — frente da coxa", equip: "Kettlebells 6 e 8 kg · bola suíça · caixote · caneleiras · cabo de madeira",
     blocos: [
       { nome: "Aquecimento (8 min)", itens: [
-        ["Bicicleta ou caminhada rápida", "5 min", "5 min"],
-        ["Agachamento livre sem peso", "2 x 10", "2 x 10"] ] },
+        ["Marcha no lugar ou polichinelo leve", "3 min", "3 min", "polichinelo", "", "", ""],
+        ["Agachamento livre sem peso", "2 x 10", "2 x 10", "goblet", "", "", ""],
+        ["Tornozelo na parede", "1 x 10 cada lado", "1 x 10 cada lado", "tornozelo", "", "", ""] ] },
       { nome: "Musculação", itens: [
-        ["Agachamento goblet (halter no peito) ou no banco", "3 x 12", "3 x 10 (+carga)"],
-        ["Leg press", "3 x 12", "4 x 10"],
-        ["Cadeira extensora", "3 x 15", "3 x 12 (+carga)"],
-        ["Afundo parado (ou subida no step baixo)", "2 x 10 cada perna", "3 x 10 cada perna"],
-        ["Panturrilha em pé", "3 x 15", "3 x 20"] ] },
-      { nome: "Flexibilidade e mobilidade (10 min)", itens: [
-        ["Mobilidade de tornozelo na parede", "2 x 10 cada", "2 x 10 cada"],
-        ["Quadril 90/90", "2 x 8 cada lado", "2 x 8 cada lado"],
-        ["Gato-camelo", "2 x 10", "2 x 10"] ] }
+        ["Agachamento goblet", "3 x 12", "3 x 15", "goblet", "kettlebell 8 kg", "", "Kettlebell no peito, coxa até ficar paralela"],
+        ["Agachamento com bola na parede", "3 x 12", "3 x 15", "agachbola", "", "bola + kettlebell 6 kg (ou sem peso)", "Bola nas costas, desliza para baixo e volta"],
+        ["Subida no caixote", "3 x 10 cada perna", "3 x 12 cada perna", "stepup", "kettlebell 8 kg", "sem peso, mão na parede", "Pé inteiro no caixote, sem impulso"],
+        ["Extensão de joelho sentado", "3 x 15 cada perna", "3 x 18 cada perna", "extensao", "1 caneleira de 2 kg", "1 caneleira de 2 kg", "Estica devagar e segura 1 s"],
+        ["Panturrilha no degrau", "3 x 20", "3 x 25", "panturrilha", "kettlebell 8 kg", "sem peso", "Ponta dos pés na borda do caixote, mão na parede"] ] },
+      { nome: "Mobilidade no tatame (10 min)", itens: [
+        ["Quadril 90/90", "2 x 8 cada lado", "2 x 8 cada lado", "9090", "", "", ""],
+        ["Gato-camelo", "2 x 10", "2 x 10", "gatocamelo", "", "", ""],
+        ["Rotação de tronco com cabo", "2 x 10 cada lado", "2 x 10 cada lado", "rotcabo", "", "", "Cabo de madeira nos ombros"] ] }
     ],
-    corrida: { tipo: "Descanso de corrida", s1: "—", s2: "—", obs: "Foco total na perna e na recuperação." }
-  },
-  qua: {
-    titulo: "Membros superiores — puxar (curto, pós-balé)", cor: "roxo",
-    nota: "Mãe: a aula de balé é o treino do dia. Pai: treino curto depois de dar a aula (20:00–20:25).",
+    corrida: { tipo: "Descanso de corrida", s1: "—", s2: "—", obs: "Foco total na perna e na recuperação." } },
+  qua: { titulo: "Balé + puxar curto", equip: "Kit (halter e barra) · kettlebell 6 kg · tatame",
+    nota: "Mãe: a aula de balé (18:00–20:00) é o treino do dia. Pai: circuito de 25 min depois de dar a aula.",
     blocos: [
-      { nome: "Musculação (em circuito, 1 min de descanso)", itens: [
-        ["Puxada frontal (ou remada com elástico em casa)", "3 x 12", "3 x 10 (+carga)"],
-        ["Remada baixa ou remada curvada com halter", "3 x 12", "3 x 10"],
-        ["Face pull ou crucifixo inverso", "2 x 15", "3 x 15"],
-        ["Rosca direta", "2 x 12", "3 x 12"] ] },
-      { nome: "Core + isometria", itens: [
-        ["Prancha frontal", "2 x 30 s", "3 x 30 s"],
-        ["Perdigueiro (4 apoios, braço e perna opostos)", "2 x 10 cada lado", "2 x 12 cada lado"] ] }
+      { nome: "Circuito do pai (25 min)", itens: [
+        ["Remada unilateral com halter", "3 x 12 cada braço", "3 x 12 (+1 anilha)", "remadauni", "halter pesado (≈ 8,5 kg)", "", "Mão e joelho na cadeira, puxa até o quadril"],
+        ["Remada curvada com barra", "3 x 12", "3 x 15", "remadabarra", "barra completa (≈ 15 kg)", "", "Tronco inclinado, costas retas"],
+        ["Pullover no tatame", "3 x 12", "3 x 15", "pullover", "kettlebell 6 kg", "", "De trás da cabeça até acima do peito"],
+        ["Crucifixo inverso", "2 x 15", "3 x 15", "crucifixo", "2 halteres leves", "", "Tronco inclinado, abre os braços"],
+        ["Rosca direta com barra", "3 x 12", "3 x 15", "rosca", "barra com 4 anilhas (≈ 8 kg)", "", "Cotovelos colados no corpo"] ] },
+      { nome: "Core", itens: [
+        ["Prancha", "2 x 30 s", "3 x 30 s", "prancha", "", "", ""],
+        ["Perdigueiro", "2 x 10 cada lado", "2 x 12 cada lado", "perdigueiro", "", "", "Braço e perna opostos"] ] }
     ],
-    corrida: { tipo: "Intervalado leve (opcional)", s1: "6 x (1 min trote + 1 min caminhada)", s2: "8 x (1 min trote + 1 min caminhada)",
-      obs: "Só se sobrar energia depois da aula. Se encurtar o sono, pule." }
-  },
-  qui: {
-    titulo: "Membros inferiores — foco posterior", cor: "verde",
+    corrida: { tipo: "Sem corrida", s1: "—", s2: "—", obs: "Noite curta: jantar às 20:40 e cama às 22h." } },
+  qui: { titulo: "Pernas — posterior e glúteos", equip: "Barra do kit · kettlebells · bola suíça · caneleiras · tatame · cabo",
     blocos: [
       { nome: "Aquecimento (8 min)", itens: [
-        ["Bicicleta ou caminhada rápida", "5 min", "5 min"],
-        ["Ponte de glúteo sem peso", "2 x 12", "2 x 12"] ] },
+        ["Marcha no lugar ou polichinelo leve", "3 min", "3 min", "polichinelo", "", "", ""],
+        ["Ponte de glúteo sem peso", "2 x 12", "2 x 12", "pelvica", "", "", ""],
+        ["Gato-camelo", "1 x 10", "1 x 10", "gatocamelo", "", "", ""] ] },
       { nome: "Musculação", itens: [
-        ["Levantamento terra romeno (stiff) com halteres", "3 x 12", "3 x 10 (+carga)"],
-        ["Mesa ou cadeira flexora", "3 x 12", "3 x 12 (+carga)"],
-        ["Elevação pélvica", "3 x 12", "4 x 10"],
-        ["Abdução de quadril (máquina ou elástico)", "3 x 15", "3 x 15"] ] },
-      { nome: "Isometria + alongamento profundo (10 min)", itens: [
-        ["Ponte isométrica", "3 x 30 s", "3 x 40 s"],
-        ["Alongamento de posteriores (sentado)", "2 x 40 s", "2 x 40 s"],
-        ["Alongamento de glúteo (figura 4)", "2 x 40 s cada", "2 x 40 s cada"] ] }
+        ["Levantamento terra romeno (stiff)", "3 x 12", "3 x 15", "stiffbarra", "barra completa (≈ 15 kg)", "kettlebell 6 kg", "Quadril para trás, costas retas"],
+        ["Flexora na bola suíça", "3 x 10", "3 x 12", "flexorabola", "bola suíça", "", "Quadril alto, puxa a bola com os calcanhares"],
+        ["Flexora em pé com caneleira", "3 x 12 cada perna", "3 x 15 cada perna", "flexorape", "", "1 caneleira de 2 kg", "Mão na cadeira, calcanhar em direção ao glúteo"],
+        ["Elevação pélvica no tatame", "3 x 15", "4 x 12", "pelvica", "kettlebell 8 kg no quadril", "kettlebell 4 kg ou sem peso", "Aperta o glúteo e segura 1 s em cima"],
+        ["Abdução deitado de lado", "3 x 15 cada lado", "3 x 18 cada lado", "abducao", "1 caneleira de 2 kg", "1 caneleira de 2 kg", "Perna de cima sobe reta"] ] },
+      { nome: "Isometria e alongamento profundo (10 min)", itens: [
+        ["Ponte isométrica", "3 x 30 s", "3 x 40 s", "pelvica", "", "", "Quadril alto e parado, sem peso"],
+        ["Posterior da coxa com cabo", "2 x 40 s", "2 x 40 s", "alongpost", "", "", ""],
+        ["Glúteo (figura 4)", "2 x 40 s cada lado", "2 x 40 s cada lado", "figura4", "", "", ""] ] }
     ],
-    corrida: { tipo: "Descanso de corrida", s1: "—", s2: "—", obs: "Protege posteriores e glúteos." }
-  },
-  sex: {
-    titulo: "Membros superiores — completo", cor: "azul",
+    corrida: { tipo: "Descanso de corrida", s1: "—", s2: "—", obs: "Protege posteriores e glúteos." } },
+  sex: { titulo: "Superiores — completo", equip: "Kit de halteres · kettlebells · caixote · bola suíça · tatame",
     blocos: [
-      { nome: "Aquecimento (8 min)", itens: [["Bicicleta ou polichinelo leve", "5 min", "5 min"]] },
+      { nome: "Aquecimento (8 min)", itens: [
+        ["Marcha no lugar ou polichinelo leve", "3 min", "3 min", "polichinelo", "", "", ""],
+        ["Deslocamento de ombros com cabo", "1 x 10", "1 x 10", "deslocamento", "", "", ""] ] },
       { nome: "Musculação", itens: [
-        ["Supino máquina ou flexão inclinada", "3 x 10", "3 x 10 (+carga)"],
-        ["Remada curvada com halter", "3 x 10", "3 x 10 (+carga)"],
-        ["Desenvolvimento com halteres", "3 x 10", "3 x 10"],
-        ["Puxada frontal", "3 x 10", "3 x 10"],
-        ["Bíceps + tríceps em sequência (bi-set)", "2 x 12", "3 x 12"] ] },
-      { nome: "Isometria intensa de tronco", itens: [
-        ["Prancha frontal", "3 x 45 s", "3 x 50 s"],
-        ["Canoa (hollow hold) — joelhos dobrados se precisar", "3 x 20 s", "3 x 25 s"],
-        ["Pallof isométrico (elástico)", "2 x 20 s cada lado", "3 x 20 s cada lado"] ] }
+        ["Flexão de braço", "3 x 10", "3 x 12", "flexaocaixa", "no chão", "mãos no caixote", ""],
+        ["Remada unilateral com kettlebell", "3 x 12 cada braço", "3 x 15 cada braço", "remadakb", "kettlebell 8 kg", "kettlebell 6 kg", "Mão na cadeira, puxa até o quadril"],
+        ["Desenvolvimento sentado", "3 x 10 cada braço", "3 x 12 cada braço", "desenvolvimento", "halter pesado", "halter leve", ""],
+        ["Pullover no tatame", "3 x 12", "3 x 15", "pullover", "kettlebell 6 kg", "kettlebell 4 kg", ""],
+        ["Rosca + tríceps em sequência", "2 x 12 cada", "3 x 12 cada", "rosca", "halter pesado", "halter leve", "Uma série de rosca e, logo depois, uma de tríceps"] ] },
+      { nome: "Isometria intensa", itens: [
+        ["Prancha", "3 x 45 s", "3 x 50 s", "prancha", "", "joelhos no chão, 3 x 30 s", ""],
+        ["Canoa", "3 x 20 s", "3 x 25 s", "canoa", "", "", "Joelhos dobrados se precisar"],
+        ["Prancha na bola", "2 x 20 s", "2 x 30 s", "pranchabola", "antebraços na bola", "dead bug 2 x 10 no lugar", ""] ] }
     ],
-    corrida: { tipo: "Trote leve contínuo", s1: "15 min", s2: "18 min", obs: "Mesmo ritmo de segunda." }
-  },
-  sab: {
-    titulo: "Membros inferiores global + escápulas", cor: "laranja",
+    corrida: { tipo: "Trote leve contínuo", s1: "15 min", s2: "18 min", obs: "Mesmo ritmo de segunda. Mãe: caminhada rápida." } },
+  sab: { titulo: "Pernas global + escápulas", equip: "Kettlebells · barra do kit · caixote · bola suíça · tatame · cabo",
     nota: "De manhã: atividade leve com as crianças. Treino às 19:00.",
     blocos: [
       { nome: "Musculação", itens: [
-        ["Agachamento goblet", "3 x 10", "3 x 10 (+carga)"],
-        ["Leg press", "3 x 10", "3 x 10"],
-        ["Stiff com halteres", "3 x 10", "3 x 10"],
-        ["Afundo caminhando (ou parado)", "2 x 8 cada perna", "2 x 10 cada perna"],
-        ["Y-T-W de bruços (escápulas)", "2 x 8 cada letra", "2 x 10 cada letra"] ] },
+        ["Agachamento goblet", "3 x 10", "3 x 12", "goblet", "kettlebell 8 kg", "bola na parede + kettlebell 6 kg", ""],
+        ["Stiff", "3 x 10", "3 x 12", "stiffkb", "barra completa (≈ 15 kg)", "kettlebell 6 kg", ""],
+        ["Subida no caixote", "2 x 8 cada perna", "2 x 10 cada perna", "stepup", "kettlebell 8 kg", "sem peso, mão na parede", ""],
+        ["Y-T-W de bruços", "2 x 8 cada letra", "2 x 10 cada letra", "ytw", "sem peso", "sem peso", "No tatame, braços formam Y, T e W"] ] },
       { nome: "Mobilidade torácica", itens: [
-        ["Rotação torácica em 4 apoios", "2 x 10 cada lado", "2 x 10 cada lado"],
-        ["Livro aberto deitado de lado", "2 x 8 cada lado", "2 x 8 cada lado"] ] }
+        ["Rotação em 4 apoios", "2 x 10 cada lado", "2 x 10 cada lado", "rot4", "", "", ""],
+        ["Livro aberto", "2 x 8 cada lado", "2 x 8 cada lado", "livro", "", "", ""],
+        ["Cabo por cima da cabeça", "2 x 10", "2 x 10", "deslocamento", "", "", ""] ] }
     ],
-    corrida: { tipo: "Corrida contínua moderada (maior volume)", s1: "25 min", s2: "30 min",
-      obs: "Ritmo confortável, um pouco mais firme que o trote. É o treino-chave para os 5 km." }
-  },
-  dom: {
-    titulo: "Recuperação ativa", cor: "cinza",
+    corrida: { tipo: "Corrida contínua moderada (maior da semana)", s1: "25 min", s2: "30 min", obs: "Um pouco mais firme que o trote. Mãe: caminhada rápida." } },
+  dom: { titulo: "Recuperação ativa", equip: "Bola suíça · cabo de madeira · tatame",
     blocos: [
-      { nome: "Movimento leve", itens: [["Caminhada leve (pode ser em família)", "20–30 min", "20–30 min"]] },
-      { nome: "Flexibilidade e mobilidade (15 min)", itens: [
-        ["Alongamento geral de pernas", "2 x 40 s cada", "2 x 40 s cada"],
-        ["Mobilidade de quadril e ombros", "2 x 10", "2 x 10"],
-        ["Respiração lenta deitado", "3 min", "3 min"] ] }
+      { nome: "Movimento leve", itens: [["Caminhada leve em família", "20–30 min", "20–30 min", "familia", "", "", ""]] },
+      { nome: "Mobilidade com cabo e bola", itens: [
+        ["Deslocamento de ombros com cabo", "2 x 10", "2 x 10", "deslocamento", "", "", ""],
+        ["Rotação de tronco com cabo", "2 x 10 cada lado", "2 x 10 cada lado", "rotcabo", "", "", ""],
+        ["Círculos de quadril", "2 x 10 cada sentido", "2 x 10 cada sentido", "bolasentado", "sentado na bola", "sentada numa cadeira", ""] ] },
+      { nome: "Alongamento no tatame", itens: [
+        ["Posterior da coxa", "2 x 40 s", "2 x 40 s", "alongpost", "", "", ""],
+        ["Glúteo (figura 4)", "2 x 40 s cada lado", "2 x 40 s cada lado", "figura4", "", "", ""],
+        ["Respiração lenta", "3 min", "3 min", "respiracao", "", "", "4 s puxando o ar, 6 s soltando"] ] }
     ],
-    corrida: { tipo: "Sem corrida", s1: "—", s2: "—", obs: "" }
-  }
+    corrida: { tipo: "Sem corrida", s1: "—", s2: "—", obs: "" } }
 };
 
 const TREINO_ORIENTACOES = [
   "Carga: escolha um peso em que as 2 últimas repetições fiquem difíceis, mas com boa postura.",
   "Descanso entre séries: 60 a 90 segundos.",
   "Semana 2: aumente um pouco a carga ou as repetições, só se a semana 1 foi bem.",
-  "Mãe: troque o trote por caminhada rápida ou por 2 min de caminhada + 1 min de trote, até liberação médica. Se o joelho incomodar, troque o afundo pelo leg press.",
+  "Mãe: a corrida é caminhada rápida até a liberação médica. Se o joelho incomodar, troque a subida no caixote pelo agachamento com bola na parede.",
+  "Sem saltos no caixote nesta fase. Confira no rótulo o peso máximo da bola suíça e do caixote.",
   "Mãe: beba água antes, durante e depois. Tontura ou fraqueza = parar e comer algo.",
   "Dor articular aguda, dor no peito ou falta de ar fora do normal: pare o treino."
 ];
@@ -603,4 +597,65 @@ const QUIZ = [
 
 const MEDALHAS = [
   [10, "🥉", "Bronze"], [30, "🥈", "Prata"], [60, "🥇", "Ouro"], [100, "🏆", "Campeão da Saúde"]
+];
+
+// ---------- PLANO DE CORRIDA (8 semanas) ----------
+const PLANO_CORRIDA = [
+  { sem: "1", pai: "Trote 15 min (seg, sex) · 25 min (sáb)", mae: "Caminhada rápida 15 min (seg, sex) · 25 min (sáb)" },
+  { sem: "2", pai: "Trote 18 min · sábado 30 min", mae: "Caminhada rápida 18 min · sábado 30 min" },
+  { sem: "3", pai: "Trote 20 min · sábado 32 min", mae: "Caminhada rápida 20 min · sábado 35 min" },
+  { sem: "4", pai: "Trote 22 min · sábado: teste de 5 km", mae: "Caminhada rápida 25 min · sábado 40 min" },
+  { sem: "5", pai: "Trote 25 min · sábado 40 min", mae: "Com liberação médica: 6 x (1 min trote + 3 min caminhada)" },
+  { sem: "6", pai: "Trote 25 min · sábado 45 min", mae: "8 x (1 min trote + 2 min caminhada)" },
+  { sem: "7", pai: "Trote 28 min · sábado 50 min", mae: "6 x (2 min trote + 2 min caminhada)" },
+  { sem: "8", pai: "Trote 30 min · sábado: 8 km contínuos", mae: "5 x (3 min trote + 2 min caminhada) · prova de 5 km caminhando e trotando" }
+];
+
+// ---------- CRIANÇAS: atividades, prêmios e arco-íris ----------
+const ATIVIDADES = [
+  { id: "a1", em: "🎵", nome: "Dança das estátuas", tipo: "Brincadeira ativa", desc: "Música tocando: todos dançam. Parou: vira estátua!" },
+  { id: "a2", em: "🏃", nome: "Pega-pega no quintal", tipo: "Brincadeira ativa", desc: "10 minutos de pega-pega com a família." },
+  { id: "a3", em: "🪢", nome: "Pular corda", tipo: "Brincadeira ativa", desc: "Quantos pulos seguidos você consegue?" },
+  { id: "a4", em: "🧗", nome: "Circuito maluco", tipo: "Brincadeira ativa", desc: "Montar um circuito com almofadas, cadeiras e o tatame." },
+  { id: "a5", em: "🩰", nome: "Aula de balé do papai", tipo: "Brincadeira ativa", desc: "Aprender 3 passos de balé com o papai." },
+  { id: "a6", em: "🚶", nome: "Caça ao tesouro na caminhada", tipo: "Brincadeira ativa", desc: "Achar: 1 folha grande, 1 pedra lisa, 1 flor e 1 passarinho." },
+  { id: "a7", em: "🥗", nome: "Salada arco-íris", tipo: "Cozinha", desc: "Montar uma salada com pelo menos 4 cores." },
+  { id: "a8", em: "🍡", nome: "Espetinho de frutas", tipo: "Cozinha", desc: "Montar espetinhos alternando as cores." },
+  { id: "a9", em: "🛒", nome: "Ajudante de compras", tipo: "Cozinha", desc: "Escolher 1 legume e 1 fruta no mercado." },
+  { id: "a10", em: "👃", nome: "Detetive dos sabores", tipo: "Desafio", desc: "De olhos fechados, adivinhar 3 alimentos pelo cheiro e sabor." },
+  { id: "a11", em: "🌱", nome: "Provei uma coisa nova", tipo: "Desafio", desc: "Provar um alimento que nunca comeu. Não precisa gostar!" },
+  { id: "a12", em: "🧘", nome: "Respiração do balão", tipo: "Calma", desc: "Encher a barriga de ar como um balão, 5 vezes, antes de dormir." },
+  { id: "a13", em: "📖", nome: "História antes de dormir", tipo: "Calma", desc: "Uma história lida em família, com as telas desligadas." }
+];
+const RECOMPENSAS = [
+  { id: "r1", estrelas: 15, premio: "Escolher o filme da sexta" },
+  { id: "r2", estrelas: 30, premio: "Escolher o passeio de sábado" },
+  { id: "r3", estrelas: 50, premio: "Noite do acampamento na sala" },
+  { id: "r4", estrelas: 80, premio: "Dia de piscina ou praia em família" },
+  { id: "r5", estrelas: 120, premio: "Um passeio especial escolhido por você" }
+];
+const ARCO_IRIS = [
+  ["vermelho", "#ef4444", "Vermelho", "🍅 tomate, 🍎 maçã, 🍉 melancia"],
+  ["laranja", "#f59e0b", "Laranja e amarelo", "🥕 cenoura, 🍊 laranja, 🍌 banana"],
+  ["verde", "#22c55e", "Verde", "🥦 brócolis, 🥒 pepino, quiabo"],
+  ["roxo", "#8b5cf6", "Roxo", "🍇 uva, beterraba, 🍆 berinjela"],
+  ["branco", "#e5e7eb", "Branco", "🧄 alho, cebola, 🥔 batata, couve-flor"]
+];
+
+// ---------- RELÓGIO (Xiaomi Smart Band 9 Active + Mi Fitness) ----------
+const RELOGIO_METAS = { passos: 8000, sono: 7 };
+const RELOGIO_GUIA = [
+  "Abra o app Mi Fitness no celular e puxe a tela para baixo para sincronizar a pulseira.",
+  "Passos, distância e calorias: aba Saúde → cartão Passos.",
+  "Sono: aba Saúde → cartão Sono (horas e pontuação da noite).",
+  "Frequência cardíaca de repouso, SpO₂ e estresse: cada um no seu cartão da aba Saúde.",
+  "Anote aqui uma vez por dia (de manhã, vendo o dia anterior) ou só o resumo da semana.",
+  "Se quiser, tire um print da tela do Mi Fitness e anexe no registro."
+];
+const RELOGIO_CONFIG = [
+  "Mi Fitness → Dispositivo → Monitoramento de saúde: frequência cardíaca o dia todo e sono avançado ligados.",
+  "Ligue o alerta de frequência cardíaca alta e o alerta de ficar muito tempo parado.",
+  "A pulseira não tem GPS: nas corridas, inicie o treino pelo Mi Fitness no celular e leve o celular junto, para medir distância e ritmo.",
+  "Use a pulseira firme, um dedo acima do osso do pulso, principalmente no treino.",
+  "A pulseira e o app não são aparelhos médicos: valores estranhos devem ser conferidos com o médico."
 ];

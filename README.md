@@ -13,6 +13,9 @@ Plataforma da família com abas para: Hoje, Cardápio, Receitas, Compras, Treino
 | `app.js` | Funcionamento das abas |
 | `criancas.js` | Missões e joguinhos das crianças |
 | `provas.js` | Provas e eventos de corrida, recordes e fotos |
+| `figuras.js` | Desenhos dos exercícios |
+| `relogio.js` | Aba do relógio (Mi Fitness) |
+| `editor.js` | Modo edição e aba Ajustes |
 | `supabase.sql` | Cria a tabela e a pasta privada de fotos no Supabase |
 
 Todos ficam na raiz do repositório, sem pastas (mais fácil de subir pelo tablet).
@@ -20,7 +23,7 @@ Todos ficam na raiz do repositório, sem pastas (mais fácil de subir pelo table
 ## Passo 1 — GitHub (pelo tablet)
 
 1. Crie um repositório novo, por exemplo `familia-saudavel`, na sua conta **pessoal**. Não use a organização da escola.
-2. **Add file → Upload files** e envie os 9 arquivos de uma vez → **Commit changes**.
+2. **Add file → Upload files** e envie os 12 arquivos de uma vez → **Commit changes**.
 3. **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save**.
 4. Em 1 ou 2 minutos, o site fica em `https://SEU-USUARIO.github.io/familia-saudavel/`.
 

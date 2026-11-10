@@ -87,6 +87,15 @@
     </section>`;
   }
 
+  function planoHtml() {
+    const semanaAtual = Math.floor((new Date(iso() + "T00:00:00") - new Date(CONFIG.DATA_INICIO + "T00:00:00")) / 6048e5) + 1;
+    return `<section class="cartao"><h2>🗓️ Plano de corrida ${App.edBtn("ed-plano")}</h2>
+      <p class="mudo">Progressão para os 5 km e, depois, os 10 km. Estamos na semana ${Math.max(1, semanaAtual)} do plano.</p>
+      <div class="rolar"><table class="tabela"><thead><tr><th>Sem.</th><th>${esc(N.pai)}</th><th>${esc(N.mae)}</th></tr></thead><tbody>
+      ${PLANO_CORRIDA.map((x) => `<tr style="${String(x.sem) === String(semanaAtual) ? "background:var(--amarelo-claro)" : ""}"><td><strong>${esc(x.sem)}</strong></td><td>${esc(x.pai)}</td><td>${esc(x.mae)}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="mudo" style="margin-top:.5rem">${esc(N.mae)}: o trote só entra com a liberação do médico. Os treinos de corrida do dia a dia são anotados em Família → Acompanhar.</p></section>`;
+  }
   TELAS.provas = () => {
     const lista = eventos().slice().sort((a, b) => b.data.localeCompare(a.data));
     const proximas = lista.filter((e) => e.status === "inscrito").sort((a, b) => a.data.localeCompare(b.data));
@@ -102,6 +111,7 @@
       </div>
       <button class="btn primario largo" data-acao="nova-prova">+ Registrar prova ou inscrição</button>
     </section>
+    ${planoHtml()}
     <section class="cartao"><h2>🏆 Recordes pessoais</h2>${recordes(lista)}</section>
     ${proximas.length ? `<h2>Próximas provas</h2><div class="grade">${proximas.map(cartaoEvento).join("")}</div>` : ""}
     <h2 style="margin-top:.5rem">Histórico</h2>

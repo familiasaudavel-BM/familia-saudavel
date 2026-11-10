@@ -14,7 +14,9 @@
   function estrelasTotal(k) {
     let t = 0;
     Object.keys(Store.cache).forEach((key) => {
-      if (key.startsWith("missoes:" + k + ":")) t += (Store.cache[key] || []).length;
+      if (key.startsWith("missoes:" + k + ":")) t += (Store.cache[key] || []).filter((id) => MISSOES.some((m) => m[0] === id)).length;
+      if (key.startsWith("ativ:" + k + ":")) t += (Store.cache[key] || []).length * 2;
+      if (key.startsWith("arco:" + k + ":")) t += (Store.cache[key] || []).length;
     });
     const j = Store.get("jogos:" + k, {});
     Object.values(j).forEach((v) => { t += v; });
@@ -29,6 +31,47 @@
   function atualizarPlacar() {
     const el = document.getElementById("placar"); if (el) el.textContent = estrelasTotal(kid);
   }
+
+  function extras() {
+    const hoje = iso(); const arco = Store.get("arco:" + kid + ":" + hoje, []); const fz = Store.get("ativ:" + kid + ":" + hoje, []);
+    const tipos = [...new Set(ATIVIDADES.map((a) => a.tipo))];
+    return `
+      <section class="cartao">
+        <h2>🌈 Arco-íris no prato <button class="falar" data-acao="falar" data-t="Arco-íris no prato. Toque em cada cor que você comeu hoje.">🔊</button></h2>
+        <p class="mudo">Toque em cada cor que você comeu hoje. Cada cor vale ⭐.</p>
+        <div class="arco">${ARCO_IRIS.map(([id, cor, nome, ex]) => `<button class="arco-cor ${arco.includes(id) ? "feita" : ""}" style="--c:${cor}" data-acao="arco" data-id="${id}" data-t="${esc(nome)}"><b>${esc(nome)}</b><small>${esc(ex)}</small></button>`).join("")}</div>
+        <div class="festa">${arco.length === ARCO_IRIS.length ? "🌈 Arco-íris completo!" : ""}</div>
+      </section>
+      <section class="cartao">
+        <h2>🎲 Atividades em família ${App.edBtn("ed-atividades")}</h2>
+        <p class="mudo">Fez a atividade? Toque em "Fiz!" e ganhe ⭐⭐.</p>
+        ${tipos.map((t) => `<h3 style="margin-top:.7rem">${esc(t)}</h3><div class="ativs">${ATIVIDADES.filter((a) => a.tipo === t).map((a) => { const ok = fz.includes(a.id); return `
+          <div class="ativ ${ok ? "feita" : ""}"><span class="em">${esc(a.em)}</span><div class="ativ-txt"><b>${esc(a.nome)}</b><small>${esc(a.desc)}</small></div>
+          <button class="btn pequeno ${ok ? "" : "primario"}" data-acao="ativ" data-id="${a.id}" data-t="${esc(a.nome)}">${ok ? "✅ Feita" : "Fiz!"}</button></div>`; }).join("")}</div>`).join("")}
+      </section>`;
+  }
+  function premios(total) {
+    const lista = RECOMPENSAS.slice().sort((a, b) => a.estrelas - b.estrelas);
+    return `
+      <section class="cartao">
+        <h2>🎁 Prêmios ${App.edBtn("ed-recompensas")}</h2>
+        ${lista.map((r) => { const ok = total >= r.estrelas; return `
+          <div class="premio ${ok ? "ok" : ""}"><div><b>${ok ? "🎉 " : ""}${esc(r.premio)}</b><div class="barra"><span style="width:${Math.min(100, Math.round(total / r.estrelas * 100))}%"></span></div></div>
+          <span class="premio-n">${ok ? "Conquistado!" : `faltam ${r.estrelas - total} ⭐`}</span></div>`; }).join("") || `<p class="mudo">Nenhum prêmio cadastrado.</p>`}
+      </section>`;
+  }
+  ACOES.arco = (el) => {
+    const k = "arco:" + kid + ":" + iso(), id = el.dataset.id; let a = Store.get(k, []);
+    const marcou = !a.includes(id); a = marcou ? [...a, id] : a.filter((x) => x !== id); Store.set(k, a);
+    if (marcou) { falar(a.length === ARCO_IRIS.length ? "Parabéns! Arco-íris completo!" : el.dataset.t + "! Mais uma cor!"); toast("⭐ +1 estrela!"); }
+    App.render();
+  };
+  ACOES.ativ = (el) => {
+    const k = "ativ:" + kid + ":" + iso(), id = el.dataset.id; let a = Store.get(k, []);
+    const marcou = !a.includes(id); a = marcou ? [...a, id] : a.filter((x) => x !== id); Store.set(k, a);
+    if (marcou) { falar("Muito bem! " + el.dataset.t + ". Ganhou duas estrelas!"); toast("⭐⭐ +2 estrelas!"); }
+    App.render();
+  };
 
   TELAS.criancas = () => {
     const hoje = iso();
@@ -47,14 +90,15 @@
       </section>
 
       <section class="cartao">
-        <h2>Missões de hoje <button class="falar" data-acao="falar" data-t="Missões de hoje. Toque na missão quando conseguir fazer.">🔊</button></h2>
+        <h2>Missões de hoje ${App.edBtn("ed-missoes")} <button class="falar" data-acao="falar" data-t="Missões de hoje. Toque na missão quando conseguir fazer.">🔊</button></h2>
         <div class="missoes">
           ${MISSOES.map(([id, em, txt]) => `<button class="missao ${feitas.includes(id) ? "feita" : ""}" data-acao="missao" data-id="${id}" data-t="${esc(txt)}"><span class="em">${em}</span>${esc(txt)}</button>`).join("")}
         </div>
       </section>
 
+      ${extras()}
       <section class="cartao">
-        <h2>Joguinhos <button class="falar" data-acao="falar" data-t="Escolha um joguinho. Cada acerto vale uma estrela.">🔊</button></h2>
+        <h2>Joguinhos ${App.edBtn("ed-quiz", "", "✏️ Perguntas do quiz")} <button class="falar" data-acao="falar" data-t="Escolha um joguinho. Cada acerto vale uma estrela.">🔊</button></h2>
         <p class="mudo">Cada acerto vale ⭐ (até ${LIMITE_JOGO} estrelas de jogo por dia).</p>
         <div class="jogos">
           <button class="jogo-btn" style="background:#16a34a" data-acao="jogo" data-j="prato"><span class="em">🍽️</span>Monte o prato</button>
@@ -65,6 +109,7 @@
         </div>
       </section>
 
+      ${premios(total)}
       <section class="cartao jogo-area" id="jogo">
         <p class="mudo">Escolha um joguinho acima.</p>
         ${escolha ? `<p>Seu prato escolhido para domingo: <strong>${esc(App.receitaPorId(escolha)?.nome || "")}</strong></p>` : ""}
